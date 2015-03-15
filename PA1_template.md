@@ -44,8 +44,9 @@ Graph showing the average number of steps taken per day of the 5 min intervals:
 
 
 ```r
-average_steps<-aggregate(steps~interval,data=data,FUN=mean,na.rm=T)
-with(average_steps,plot(interval,steps,type="l",main="average number of steps taken of the 5 min interval",xlab="min",ylab="average number of steps"))
+data$time<-as.POSIXct(strptime(sprintf("%04d",as.numeric(data$interval)),"%H%M"))
+average_steps<-aggregate(steps~time,data=data,FUN=mean,na.rm=T)
+with(average_steps,plot(time,steps,type="l",main="average number of steps taken of the 5 min interval",xlab="time of a day",ylab="average number of steps"))
 ```
 
 ![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png) 
@@ -54,10 +55,11 @@ Inverval of the maximum number of average steps:
 
 
 ```r
-interval_max<-average_steps[which(average_steps$steps==max(average_steps$steps)),1]
+time_max<-average_steps[which(average_steps$steps==max(average_steps$steps)),1]
+interval_max<-format(time_max,format="%H:%M")
 ```
 
-Inverval of 835, on average across all the days in the dataset, contains the maximum number of steps. 
+Inverval of 08:35, on average across all the days in the dataset, contains the maximum number of steps. 
 
 ###Imputting missing values
 
@@ -75,7 +77,7 @@ Fill in the missing values with the mean for that 5 min interval:
 data2<-data
 for (i in 1:nrow(data2)){
   if (is.na(data2$steps[i]))
-    data2$steps[i]=average_steps$steps[which(average_steps$interval==data$interval[i])]
+    data2$steps[i]=average_steps$steps[which(average_steps$time==data$time[i])]
 }
 ```
 
@@ -129,8 +131,9 @@ Plot of average number of steps taken of the 5 min interval across all weekday o
 
 
 ```r
-average_steps_day<-aggregate(steps~interval + day,data2,mean)
-ggplot(average_steps_day,aes(interval,steps))+geom_line()+facet_grid(day~.)+labs(y="number of steps")
+average_steps_day<-aggregate(steps~time + day,data2,mean)
+library(scales)
+ggplot(average_steps_day,aes(time,steps))+geom_line()+facet_grid(day~.)+labs(y="number of steps")+scale_x_datetime(breaks = date_breaks("4 hours"),labels = date_format("%H:%M"))
 ```
 
 ![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png) 
